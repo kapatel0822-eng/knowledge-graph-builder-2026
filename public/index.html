@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knowledge Builder Graph | Functional & Technical AI Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Vendor libraries -->
+  <script src="vendor/cytoscape.min.js"></script>
+  <script src="vendor/dagre.min.js"></script>
+  <script src="vendor/cytoscape-dagre.min.js"></script>
+  <script src="vendor/marked.min.js"></script>
+</head>
+<body>
+
+  <!-- TOP NAVBAR -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #818cf8;">
+        <circle cx="18" cy="5" r="3"></circle>
+        <circle cx="6" cy="12" r="3"></circle>
+        <circle cx="18" cy="19" r="3"></circle>
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+      </svg>
+      <span>Knowledge Builder Graph</span>
+      <span class="brand-badge">Gemini 3.8 AI</span>
+    </div>
+
+    <!-- Project Selector -->
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <select id="projectSelect" class="select-input" style="min-width: 200px; font-weight: 600;">
+        <option value="">Loading projects...</option>
+      </select>
+      <button class="btn btn-sm" id="btnNewProject" title="Create New Project Graph">+ Project</button>
+    </div>
+
+    <!-- Layer Switcher Pills -->
+    <div class="nav-center">
+      <div class="pill-group" id="layerFilterGroup">
+        <button class="pill-btn active" data-layer="all">Unified View</button>
+        <button class="pill-btn" data-layer="functional">Functional Layer</button>
+        <button class="pill-btn" data-layer="technical">Technical Layer</button>
+        <button class="pill-btn" data-layer="flow">Flow Trace Mode</button>
+      </div>
+
+      <!-- Layout Selector -->
+      <select id="layoutSelect" class="select-input" title="Canvas Layout Engine">
+        <option value="dagre">Hierarchical (Dagre)</option>
+        <option value="cose">Force-Directed (CoSE)</option>
+        <option value="circle">Circular</option>
+        <option value="grid">Grid</option>
+      </select>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="nav-actions">
+      <button class="btn btn-ai" id="btnOpenAiExtract">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+        </svg>
+        AI Extractor (PRD to Graph)
+      </button>
+
+      <button class="btn btn-jira" id="btnOpenJiraModal" title="Direct Atlassian Jira API Connector">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11.53 2c0 5.25 4.28 9.51 9.56 9.51H22V2h-10.47zM2 11.53c5.25 0 9.51 4.28 9.51 9.56V22H2v-10.47zM11.53 11.53H2V2h9.53v9.53z"/>
+        </svg>
+        <span>Jira Connector</span>
+        <span class="jira-status-pill" id="navJiraPill">Ready</span>
+      </button>
+
+      <button class="btn btn-kt" id="btnOpenKtModal" title="Knowledge Transfer Video & Audio Studio (STT, Documents, TTS Voice Walkthrough)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+          <line x1="8" y1="23" x2="16" y2="23"></line>
+        </svg>
+        <span>KT Studio</span>
+        <span class="kt-status-pill">Audio / STT</span>
+      </button>
+
+      <button class="btn btn-primary" id="btnAddNode">
+        <span>+ Add Node</span>
+      </button>
+
+      <button class="btn" id="btnAddEdge">
+        <span>+ Connect</span>
+      </button>
+
+      <button class="btn" id="btnToggleDrawer" title="Toggle AI Copilot and Inspector">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="15" y1="3" x2="15" y2="21"></line>
+        </svg>
+        <span>Assistant</span>
+      </button>
+
+      <button class="btn" id="btnOpenSettings" title="Settings & API Key">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <div class="main-container">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <input type="text" id="searchInput" class="text-input search-box" placeholder="Search architecture, APIs, rules...">
+      </div>
+
+      <div class="sidebar-scroll">
+        <!-- Filter by Type -->
+        <div>
+          <div class="section-title">
+            <span>Filter Entities</span>
+            <span id="activeCount" style="color: #818cf8; font-weight: 600;">All visible</span>
+          </div>
+          <div class="filter-chip-grid" id="typeFilters">
+            <!-- Functional -->
+            <div class="filter-chip active" data-type="domain"><span class="dot" style="background:#8b5cf6;"></span>Domain</div>
+            <div class="filter-chip active" data-type="user_flow"><span class="dot" style="background:#0ea5e9;"></span>User Flow</div>
+            <div class="filter-chip active" data-type="business_rule"><span class="dot" style="background:#f59e0b;"></span>Rule / Policy</div>
+            <div class="filter-chip active" data-type="actor"><span class="dot" style="background:#10b981;"></span>Actor / Role</div>
+            <!-- Technical -->
+            <div class="filter-chip active" data-type="service"><span class="dot" style="background:#06b6d4;"></span>Service</div>
+            <div class="filter-chip active" data-type="database"><span class="dot" style="background:#f43f5e;"></span>Database</div>
+            <div class="filter-chip active" data-type="queue"><span class="dot" style="background:#f97316;"></span>Event Topic</div>
+            <div class="filter-chip active" data-type="external"><span class="dot" style="background:#6366f1;"></span>External API</div>
+          </div>
+        </div>
+
+        <!-- Project Flows -->
+        <div>
+          <div class="section-title">
+            <span>End-to-End Execution Flows</span>
+            <button class="btn btn-sm" id="btnNewFlow" style="padding: 2px 6px; font-size: 0.7rem;">+ Flow</button>
+          </div>
+          <div id="flowListContainer">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Graph Metrics -->
+        <div>
+          <div class="section-title">Project Telemetry</div>
+          <div class="stats-card">
+            <div class="stat-item">
+              <span class="stat-value" id="statNodes">0</span>
+              <span class="stat-label">Total Nodes</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="statEdges">0</span>
+              <span class="stat-label">Connections</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="statTech">0</span>
+              <span class="stat-label">Technical Assets</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="statFunc">0</span>
+              <span class="stat-label">Functional Entities</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER CANVAS -->
+    <main class="canvas-wrapper">
+      <div id="cy"></div>
+
+      <!-- Floating Controls -->
+      <div class="canvas-floating-controls">
+        <button class="btn btn-sm" id="btnZoomIn" title="Zoom In">+</button>
+        <button class="btn btn-sm" id="btnZoomOut" title="Zoom Out">-</button>
+        <button class="btn btn-sm" id="btnFit" title="Fit to Screen">Fit</button>
+        <button class="btn btn-sm" id="btnResetLayout" title="Re-run Layout">Layout</button>
+        <button class="btn btn-sm" id="btnExportPng" title="Export as PNG">PNG</button>
+      </div>
+
+      <!-- Canvas Legend -->
+      <div class="canvas-legend">
+        <div style="font-weight: 700; color: #fff; margin-bottom: 2px;">Legend</div>
+        <div class="legend-row"><span class="dot" style="background:#8b5cf6;"></span> Functional (Domain, Rule, Flow, Actor)</div>
+        <div class="legend-row"><span class="dot" style="background:#06b6d4;"></span> Technical (Service, API, Broker, Store)</div>
+        <div class="legend-row"><span style="width: 14px; height: 2px; background: #6366f1; display: inline-block;"></span> Cross-layer Relationship</div>
+      </div>
+
+      <!-- Flow Execution Player Bar -->
+      <div id="flowPlayerBar" class="flow-player-bar hidden">
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button class="btn btn-sm" id="btnFlowPrev" title="Previous Step">◀</button>
+          <button class="btn btn-sm btn-primary" id="btnFlowPlay" title="Auto Play Flow">▶ Play</button>
+          <button class="btn btn-sm" id="btnFlowNext" title="Next Step">▶</button>
+        </div>
+        <div class="flow-step-info">
+          <span class="flow-step-number" id="flowStepNumber">Step 1 of 11</span>
+          <span class="flow-step-title" id="flowStepTitle">Customer Submits Order</span>
+          <span class="flow-step-desc" id="flowStepDesc">Customer places items in cart and sends HTTPS POST to Edge API Gateway.</span>
+        </div>
+        <button class="btn btn-sm btn-danger" id="btnExitFlow">Exit Flow</button>
+      </div>
+    </main>
+
+    <!-- RIGHT DRAWER -->
+    <aside id="rightDrawer" class="drawer">
+      <div class="drawer-tabs">
+        <button class="drawer-tab active" data-tab="inspector">Inspector</button>
+        <button class="drawer-tab" data-tab="copilot">AI Architecture Copilot</button>
+      </div>
+
+      <!-- TAB 1: INSPECTOR -->
+      <div id="tabInspector" class="drawer-content">
+        <div id="inspectorEmptyState" style="text-align: center; padding: 40px 10px; color: var(--text-muted);">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 10px; opacity: 0.5;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <p style="font-size: 0.85rem;">Click any node or connection on the canvas to inspect technical details, schemas, SLAs, and ownership.</p>
+        </div>
+
+        <div id="inspectorDetails" style="display: none; flex-direction: column; gap: 14px;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
+            <div>
+              <div id="inspectorBadge" class="badge badge-technical">Service</div>
+              <h2 id="inspectorTitle" style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 4px;">API Gateway</h2>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn btn-sm" id="btnEditCurrentNode">Edit</button>
+              <button class="btn btn-sm btn-danger" id="btnDeleteCurrentNode">Delete</button>
+            </div>
+          </div>
+
+          <div class="detail-group">
+            <span class="detail-label">Summary & Functional Role</span>
+            <p id="inspectorSummary" class="detail-value">Handles TLS termination, WAF, and routing to microservices.</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+            <div class="detail-group">
+              <span class="detail-label">Team / Owner</span>
+              <span id="inspectorTeam" class="detail-value">Platform Infra</span>
+            </div>
+            <div class="detail-group">
+              <span class="detail-label">Status</span>
+              <span id="inspectorStatus" class="detail-value" style="color: #34d399;">Healthy</span>
+            </div>
+          </div>
+
+          <!-- Jira Issue Tracking Card -->
+          <div class="detail-group" id="inspectorJiraCard" style="display: none; background: rgba(38, 132, 255, 0.08); border: 1px solid rgba(38, 132, 255, 0.35); padding: 10px; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span class="detail-label" style="color: #60a5fa; margin: 0; display: flex; align-items: center; gap: 4px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#60a5fa"><path d="M11.53 2c0 5.25 4.28 9.51 9.56 9.51H22V2h-10.47zM2 11.53c5.25 0 9.51 4.28 9.51 9.56V22H2v-10.47zM11.53 11.53H2V2h9.53v9.53z"/></svg>
+                Jira Functional Origin
+              </span>
+              <a id="inspectorJiraLink" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="padding: 2px 7px; font-size: 0.72rem; background: #0052cc; color: white; border: none; text-decoration: none;">
+                Open in Jira ↗
+              </a>
+            </div>
+            <div style="font-size: 0.82rem; font-weight: 600; color: #fff; margin-bottom: 5px;" id="inspectorJiraKeySummary">PAY-101: Customer Checkout</div>
+            <div style="display: flex; gap: 6px; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 6px;">
+              <span id="inspectorJiraType" class="badge" style="background: #1e3a8a; color: #93c5fd;">Story</span>
+              <span id="inspectorJiraStatus" class="badge" style="background: #1f2937; color: #34d399;">In Progress</span>
+              <span id="inspectorJiraPriority" class="badge" style="background: #1f2937; color: #f59e0b;">High</span>
+            </div>
+            <div id="inspectorJiraAcSection" style="display: none; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px; margin-top: 6px;">
+              <span class="detail-label" style="font-size: 0.68rem; color: #9ca3af; margin-bottom: 4px;">Acceptance Criteria / SLAs:</span>
+              <ul id="inspectorJiraAcList" style="margin-left: 16px; font-size: 0.74rem; color: #d1d5db; line-height: 1.45;"></ul>
+            </div>
+          </div>
+
+          <div class="detail-group" id="inspectorTechSpecsGroup">
+            <span class="detail-label">Technical & Contract Metadata</span>
+            <pre id="inspectorMetadata" style="background:#0b0f19; padding:10px; border-radius:6px; font-size:0.75rem; color:#93c5fd; overflow-x:auto;"></pre>
+          </div>
+
+          <!-- Connected Entities -->
+          <div class="detail-group">
+            <span class="detail-label">Graph Relationships</span>
+            <div class="connections-list" id="inspectorConnections">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Quick AI Action -->
+          <button class="btn btn-ai" id="btnAskAiAboutNode" style="width: 100%; justify-content: center; margin-top: 6px;">
+            Ask AI: "What happens if this component fails?"
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 2: AI ARCHITECTURE COPILOT -->
+      <div id="tabCopilot" class="drawer-content" style="display: none; height: 100%;">
+        <div class="ai-chat-container">
+          <div class="ai-preset-prompts">
+            <div class="preset-chip" data-prompt="What happens if the Edge API Gateway goes down?">💥 Gateway Failure Impact</div>
+            <div class="preset-chip" data-prompt="Explain the complete Customer Checkout flow step by step.">🛒 Trace Checkout Flow</div>
+            <div class="preset-chip" data-prompt="Identify any single points of failure (SPOFs) in this architecture.">🔍 Detect SPOFs</div>
+            <div class="preset-chip" data-prompt="Which services handle customer credentials and PCI card data?">🔒 Security & PCI Compliance</div>
+          </div>
+
+          <div class="ai-chat-messages" id="chatMessages">
+            <div class="chat-bubble ai">
+              Hello! I am your <strong>Knowledge Graph AI Copilot</strong> powered by Gemini 3.8 Flash. I have full context of all functional domains, microservices, databases, queues, and execution flows in your project.
+              <br><br>
+              Ask me about failure impact analysis, flow explanations, bottlenecks, or architectural recommendations!
+            </div>
+          </div>
+
+          <div class="chat-input-bar">
+            <textarea id="chatInput" class="chat-textarea" placeholder="Ask anything about this project's architecture or flow..."></textarea>
+            <button class="btn btn-primary" id="btnSendChat" style="height: 48px; padding: 0 14px;">Send</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODALS -->
+  <!-- ============================================================ -->
+
+  <!-- 1. AI GRAPH EXTRACTOR MODAL -->
+  <div id="modalAiExtract" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">AI Knowledge Graph Extractor (Gemini 3.8 Flash)</div>
+        <button class="modal-close" data-close="modalAiExtract">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.82rem; color: var(--text-secondary);">
+          Paste any PRD, architecture spec, README, system design notes, or user stories. Gemini will analyze the text and extract functional domains, technical services, databases, event topics, and their directional relationships.
+        </p>
+        <div class="form-group">
+          <label class="form-label">System Specification / Requirements Document</label>
+          <textarea id="aiExtractInput" class="form-textarea" style="min-height: 150px;" placeholder="e.g. The Logistics Platform consists of a Fleet Tracking Worker consuming GPS events from Kafka topic 'telemetry.gps'. It writes coordinates to MongoDB Fleet DB and exposes an HTTP REST API to the Dispatcher Dashboard..."></textarea>
+        </div>
+
+        <div id="aiExtractPreview" style="display: none; flex-direction: column; gap: 8px;">
+          <div class="section-title">Extracted Entities Preview</div>
+          <div id="aiExtractResults" style="background:#0b0f19; padding:10px; border-radius:6px; font-size:0.75rem; max-height:160px; overflow-y:auto; color:#a7f3d0;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-close="modalAiExtract">Cancel</button>
+        <button class="btn btn-ai" id="btnRunAiExtract">Run AI Extraction</button>
+        <button class="btn btn-primary" id="btnApplyAiExtract" style="display: none;">Add to Knowledge Graph</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. ADD / EDIT NODE MODAL -->
+  <div id="modalNode" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title" id="modalNodeTitle">Add Knowledge Graph Node</div>
+        <button class="modal-close" data-close="modalNode">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="nodeFormId">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Layer</label>
+            <select id="nodeFormLayer" class="select-input">
+              <option value="technical">Technical Layer</option>
+              <option value="functional">Functional Layer</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Entity Type</label>
+            <select id="nodeFormType" class="select-input">
+              <!-- Technical -->
+              <option value="service">Microservice / Service</option>
+              <option value="database">Database / Cache</option>
+              <option value="queue">Event Topic / Queue</option>
+              <option value="external">External Third-Party API</option>
+              <!-- Functional -->
+              <option value="domain">Domain / Subdomain</option>
+              <option value="user_flow">User Journey / Flow</option>
+              <option value="business_rule">Business Rule / Policy</option>
+              <option value="actor">Actor / Persona</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input type="text" id="nodeFormName" class="text-input" placeholder="e.g. Order Processing Service">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Summary / Purpose</label>
+          <textarea id="nodeFormSummary" class="form-textarea" style="min-height: 70px;" placeholder="Brief explanation of what this component or domain does..."></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Owner Team</label>
+            <input type="text" id="nodeFormTeam" class="text-input" placeholder="e.g. Checkout Squad">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select id="nodeFormStatus" class="select-input">
+              <option value="healthy">Healthy / Active</option>
+              <option value="planned">Planned / In Design</option>
+              <option value="deprecated">Deprecated</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Technical Details (JSON Metadata)</label>
+          <textarea id="nodeFormDetails" class="form-textarea" style="min-height: 80px; font-family: monospace;" placeholder='{ "techStack": "Node.js", "endpoints": ["POST /orders"] }'></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-close="modalNode">Cancel</button>
+        <button class="btn btn-primary" id="btnSaveNode">Save Node</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. ADD EDGE MODAL -->
+  <div id="modalEdge" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">Connect Architecture Entities</div>
+        <button class="modal-close" data-close="modalEdge">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Source Node (Caller / Producer / Actor)</label>
+          <select id="edgeFormSource" class="select-input"></select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Target Node (Receiver / Consumer / Callee)</label>
+          <select id="edgeFormTarget" class="select-input"></select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Relationship Type</label>
+          <select id="edgeFormType" class="select-input">
+            <option value="calls">calls (Synchronous HTTP/gRPC)</option>
+            <option value="publishes_to">publishes_to (Async Event Stream)</option>
+            <option value="consumes_from">consumes_from (Kafka/Queue consumer)</option>
+            <option value="reads_from">reads_from (Database/Cache query)</option>
+            <option value="writes_to">writes_to (Database persistence)</option>
+            <option value="implements">implements (Technical service implements domain)</option>
+            <option value="participates_in">participates_in (Actor participates in flow)</option>
+            <option value="depends_on">depends_on (General dependency)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Action Label</label>
+          <input type="text" id="edgeFormLabel" class="text-input" placeholder="e.g. POST /api/checkout, ChargeCard()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Summary / Description</label>
+          <input type="text" id="edgeFormSummary" class="text-input" placeholder="e.g. Passes user payload for authorization">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-close="modalEdge">Cancel</button>
+        <button class="btn btn-primary" id="btnSaveEdge">Save Connection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. NEW PROJECT MODAL -->
+  <div id="modalNewProject" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">Create New Knowledge Graph Project</div>
+        <button class="modal-close" data-close="modalNewProject">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Project Name</label>
+          <input type="text" id="newProjectName" class="text-input" placeholder="e.g. Customer Portal Architecture">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="newProjectDesc" class="form-textarea" style="min-height: 80px;" placeholder="Architecture and flows for our next-gen platform..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-close="modalNewProject">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitNewProject">Create Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. SETTINGS MODAL -->
+  <div id="modalSettings" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">Application & AI Settings</div>
+        <button class="modal-close" data-close="modalSettings">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Google Gemini API Key</label>
+          <input type="password" id="settingsGeminiKey" class="text-input" placeholder="AIzaSy...">
+          <span style="font-size: 0.72rem; color: var(--text-muted);">
+            Powers live Gemini 3.8 Flash extraction and architecture Q&A. Saved locally in SQLite. Leave blank to use built-in heuristic/simulation mode.
+          </span>
+        </div>
+
+        <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 6px;">
+          <span style="font-size: 0.78rem; font-weight: 600; color: #fff;">AI Model Status</span>
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
+            <span>Target Model:</span>
+            <span style="color: #818cf8; font-weight: 600;">gemini-3.8-flash</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
+            <span>Status:</span>
+            <span id="settingsAiStatus" style="color: #34d399; font-weight: 600;">Checking...</span>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 12px;">
+          <div class="section-title">Database & Sample Graph</div>
+          <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 10px;">
+            Reset the sample project (CloudCommerce Omni-Engine) to restore all default functional domains, microservices, databases, and checkout trace flows.
+          </p>
+          <button class="btn btn-danger btn-sm" id="btnResetSampleData">Reset Sample Project Data</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-close="modalSettings">Close</button>
+        <button class="btn btn-primary" id="btnSaveSettings">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. JIRA CONNECTOR MODAL -->
+  <div id="modalJira" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 780px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="background: rgba(38, 132, 255, 0.15); padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(38, 132, 255, 0.4);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#60a5fa">
+              <path d="M11.53 2c0 5.25 4.28 9.51 9.56 9.51H22V2h-10.47zM2 11.53c5.25 0 9.51 4.28 9.51 9.56V22H2v-10.47zM11.53 11.53H2V2h9.53v9.53z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="modal-title">Direct Atlassian Jira API Connector</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Extract Epics, User Stories & Acceptance Criteria into Functional Architecture</div>
+          </div>
+        </div>
+        <button class="modal-close" data-close="modalJira">&times;</button>
+      </div>
+
+      <!-- Jira Modal Tabs -->
+      <div class="jira-modal-nav">
+        <button class="jira-tab-btn active" data-jiratab="query">1. Query Issues (JQL)</button>
+        <button class="jira-tab-btn" data-jiratab="connect">2. API Credentials & Connection</button>
+        <button class="jira-tab-btn" data-jiratab="preview">3. Architecture Graph Preview</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px;">
+        <!-- TAB 1: QUERY & ISSUE SELECTOR -->
+        <div id="jiraTabQuery" class="jira-tab-pane">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" style="margin: 0;">Jira Query Language (JQL)</label>
+            <span id="jiraCredStatusBadge" style="font-size: 0.72rem; color: #9ca3af;">Configured Host: <strong id="jiraActiveHostDisplay" style="color: #60a5fa;">Not connected</strong></span>
+          </div>
+          
+          <textarea id="jiraJqlInput" class="form-textarea" style="min-height: 52px; font-family: monospace; font-size: 0.8rem;" placeholder="e.g. project = 'ECOM' AND issuetype in (Epic, Story, Task) ORDER BY rank ASC">issuetype in (Epic, Story, Task) ORDER BY created DESC</textarea>
+          
+          <!-- Preset Chips -->
+          <div style="margin-top: 6px; margin-bottom: 12px;">
+            <span style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Quick Presets:</span>
+            <div class="jira-preset-chips">
+              <span class="jira-preset-chip" data-jql="issuetype in (Epic, Story, Task) ORDER BY created DESC">All Epics & Stories</span>
+              <span class="jira-preset-chip" data-jql="issuetype = Story AND status != Done ORDER BY priority DESC">Open Stories</span>
+              <span class="jira-preset-chip" data-jql="priority in (Highest, High) ORDER BY created DESC">High Priority Requirements</span>
+              <span class="jira-preset-chip" data-jql="summary ~ 'checkout' OR summary ~ 'payment' OR summary ~ 'order'">Checkout & Orders</span>
+            </div>
+          </div>
+
+          <!-- Controls Bar -->
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; background: var(--bg-tertiary); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Max Results:</span>
+              <select id="jiraMaxResults" class="select-input" style="padding: 3px 8px; font-size: 0.75rem;">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+              </select>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn btn-sm" id="btnLoadDemoJira" title="Load realistic sample Jira tickets for testing without live credentials">
+                ⚡ Load Demo Dataset
+              </button>
+              <button class="btn btn-sm btn-primary" id="btnSearchJira">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                Search Live Jira
+              </button>
+            </div>
+          </div>
+
+          <!-- Issues Selection Header & List -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="jiraSelectAll" checked style="cursor: pointer;">
+              <label for="jiraSelectAll" style="font-size: 0.75rem; font-weight: 600; color: #fff; cursor: pointer;">Select All Issues</label>
+            </div>
+            <span id="jiraIssueCount" style="font-size: 0.72rem; color: #60a5fa; font-weight: 600;">0 issues ready</span>
+          </div>
+
+          <div id="jiraIssueListContainer" class="jira-issue-list">
+            <div style="text-align: center; padding: 30px 10px; color: var(--text-muted); font-size: 0.8rem;">
+              Click <strong>"Search Live Jira"</strong> to query your Jira instance or <strong>"⚡ Load Demo Dataset"</strong> to test immediately.
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: CREDENTIALS & CONNECTION -->
+        <div id="jiraTabConnect" class="jira-tab-pane" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Atlassian Jira Host URL</label>
+            <input type="text" id="jiraHostInput" class="text-input" placeholder="https://your-domain.atlassian.net">
+            <span style="font-size: 0.72rem; color: var(--text-muted);">
+              Supports Jira Cloud (e.g. <code>https://myorg.atlassian.net</code>) and self-hosted Jira Data Center / Server.
+            </span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Jira Email / Username</label>
+              <input type="email" id="jiraEmailInput" class="text-input" placeholder="engineer@company.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Atlassian API Token / PAT</label>
+              <input type="password" id="jiraTokenInput" class="text-input" placeholder="Atlassian API Token">
+            </div>
+          </div>
+
+          <div style="font-size: 0.72rem; color: var(--text-secondary); background: #0b0f19; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+            💡 <strong>How to get an API Token:</strong> In Jira Cloud, navigate to <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank" rel="noopener noreferrer" style="color: #60a5fa;">Atlassian Security > API Tokens</a>, click <strong>Create API token</strong>, and paste it above. For Jira Server/Data Center, enter a Personal Access Token (PAT).
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <button class="btn btn-primary" id="btnTestJiraConnection">Test Connection</button>
+            <button class="btn" id="btnSaveJiraCredentials">Save Credentials</button>
+          </div>
+
+          <!-- Connection Status Box -->
+          <div id="jiraTestResultBox" style="display: none; padding: 10px; border-radius: 6px; font-size: 0.78rem;"></div>
+        </div>
+
+        <!-- TAB 3: GRAPH EXTRACTION & IMPORT -->
+        <div id="jiraTabPreview" class="jira-tab-pane" style="display: none;">
+          <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 12px;">
+            <div class="section-title" style="margin-bottom: 6px;">Synthesis Engine</div>
+            <div style="display: flex; gap: 16px; font-size: 0.8rem;">
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                <input type="radio" name="jiraSynthesisMode" value="ai" id="jiraModeAi" checked>
+                <span><strong>Gemini 3.8 Flash AI</strong> (Deep semantic reasoning for personas, rules & architecture)</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                <input type="radio" name="jiraSynthesisMode" value="deterministic" id="jiraModeDeterministic">
+                <span><strong>Direct Structural</strong> (Fast offline mapping)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="jira-stat-grid" id="jiraExtractedTelemetry">
+            <div class="jira-stat-box">
+              <div class="jira-stat-num" id="statJiraDomains">0</div>
+              <div class="jira-stat-label">Domains (Epics)</div>
+            </div>
+            <div class="jira-stat-box">
+              <div class="jira-stat-num" id="statJiraFlows">0</div>
+              <div class="jira-stat-label">User Flows (Stories)</div>
+            </div>
+            <div class="jira-stat-box">
+              <div class="jira-stat-num" id="statJiraRules">0</div>
+              <div class="jira-stat-label">Rules (Criteria)</div>
+            </div>
+            <div class="jira-stat-box">
+              <div class="jira-stat-num" id="statJiraTech">0</div>
+              <div class="jira-stat-label">Technical Assets</div>
+            </div>
+          </div>
+
+          <div class="section-title">Knowledge Graph Extraction Preview</div>
+          <pre id="jiraExtractPreviewBox" style="background:#0b0f19; padding:10px; border-radius:6px; font-size:0.75rem; max-height:180px; overflow-y:auto; color:#a7f3d0; margin-bottom:10px; font-family:monospace;">No extraction performed yet. Select issues in Step 1 and click "Synthesize Knowledge Graph".</pre>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn" data-close="modalJira">Close</button>
+        <button class="btn btn-ai" id="btnExtractJiraGraph">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+          Synthesize Knowledge Graph
+        </button>
+        <button class="btn btn-primary" id="btnApplyJiraExtract" style="display: none;">
+          Add to Active Knowledge Graph
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. KT VIDEO & AUDIO STUDIO MODAL -->
+  <div id="modalKtStudio" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 860px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="background: rgba(16, 185, 129, 0.15); padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.4);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.2">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </div>
+          <div>
+            <div class="modal-title">Knowledge Transfer (KT) Video & Audio Studio</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">
+              Speech-to-Text Transcriptions, Architecture Documents & Natural Text-to-Speech Voice Walkthroughs
+            </div>
+          </div>
+        </div>
+        <button class="modal-close" data-close="modalKtStudio">&times;</button>
+      </div>
+
+      <!-- KT Modal Tabs -->
+      <div class="kt-modal-nav">
+        <button class="kt-tab-btn active" data-kttab="import">1. Import & Transcribe (STT)</button>
+        <button class="kt-tab-btn" data-kttab="document">2. Architecture Document & Voice Player (TTS)</button>
+        <button class="kt-tab-btn" data-kttab="graph">3. Knowledge Graph Topology</button>
+        <button class="kt-tab-btn" data-kttab="archive">4. KT Sessions History</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px;">
+        <!-- TAB 1: IMPORT & TRANSCRIBE -->
+        <div id="ktTabImport" class="kt-tab-pane">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label">KT Session Title / System Name</label>
+            <input type="text" id="ktSessionTitleInput" class="text-input" placeholder="e.g. Order Fulfillment & Payment Gateway Architecture Handover" value="Order Fulfillment & Payment Gateway Architecture Handover">
+          </div>
+
+          <!-- Mode Selector -->
+          <div class="kt-mode-selector">
+            <button class="kt-mode-btn active" data-ktmode="file">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              <span>Upload Video / Audio</span>
+            </button>
+            <button class="kt-mode-btn" data-ktmode="mic">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+              <span>Live Mic Recording (STT)</span>
+            </button>
+            <button class="kt-mode-btn" data-ktmode="text">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              <span>Paste Transcript / Notes</span>
+            </button>
+          </div>
+
+          <!-- Mode 1: File Upload Drop Zone -->
+          <div id="ktBoxFile" class="kt-input-box">
+            <div id="ktDropZone" class="kt-drop-zone">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.8">
+                <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                <line x1="7" y1="2" x2="7" y2="22"></line>
+                <line x1="17" y1="2" x2="17" y2="22"></line>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <line x1="2" y1="7" x2="7" y2="7"></line>
+                <line x1="2" y1="17" x2="7" y2="17"></line>
+                <line x1="17" y1="17" x2="22" y2="17"></line>
+                <line x1="17" y1="7" x2="22" y2="7"></line>
+              </svg>
+              <div style="font-weight: 600; font-size: 0.88rem; color: #fff;">
+                Drag & Drop KT Video or Audio File Here
+              </div>
+              <div style="font-size: 0.74rem; color: var(--text-secondary);">
+                Supports <strong>MP4, WebM, MKV, MP3, WAV, M4A, OGG</strong> (up to 50MB)
+              </div>
+              <input type="file" id="ktFileInput" accept="video/*,audio/*" style="display: none;">
+              <button type="button" class="btn btn-sm btn-primary" id="btnBrowseKtFile" style="margin-top: 4px;">
+                Browse Files
+              </button>
+            </div>
+            <div id="ktFileSelectedInfo" style="display: none; background: #0b0f19; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; margin-top: 8px; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge" style="background:#047857; color:#fff;" id="ktFileBadge">AUDIO</span>
+                <span id="ktFileName" style="font-weight: 600; font-size: 0.82rem; color: #fff;">recording.mp3</span>
+                <span id="ktFileSize" style="font-size: 0.72rem; color: var(--text-muted);">4.2 MB</span>
+              </div>
+              <button class="btn btn-sm btn-danger" id="btnClearKtFile">&times; Remove</button>
+            </div>
+          </div>
+
+          <!-- Mode 2: Live Mic Recording -->
+          <div id="ktBoxMic" class="kt-input-box" style="display: none;">
+            <div class="kt-rec-box">
+              <div class="kt-rec-indicator">
+                <div class="kt-rec-dot" id="ktRecDot"></div>
+                <span id="ktRecStatusText" style="color: #9ca3af;">Microphone Ready</span>
+                <span id="ktRecTimer" style="color: #fff; font-family: monospace; font-size: 0.95rem;">00:00</span>
+              </div>
+
+              <div class="kt-waveform-bars" id="ktWaveformBars">
+                <span class="kt-wave-bar"></span><span class="kt-wave-bar"></span><span class="kt-wave-bar"></span>
+                <span class="kt-wave-bar"></span><span class="kt-wave-bar"></span><span class="kt-wave-bar"></span>
+                <span class="kt-wave-bar"></span><span class="kt-wave-bar"></span><span class="kt-wave-bar"></span>
+                <span class="kt-wave-bar"></span><span class="kt-wave-bar"></span><span class="kt-wave-bar"></span>
+              </div>
+
+              <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" id="btnStartKtRec">
+                  🎙️ Start Recording KT Session
+                </button>
+                <button class="btn btn-danger" id="btnStopKtRec" style="display: none;">
+                  ⏹️ Stop & Save Recording
+                </button>
+              </div>
+
+              <div id="ktLiveTranscriptPreview" style="width: 100%; background: #111827; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; font-size: 0.75rem; color: #d1d5db; min-height: 50px; max-height: 100px; overflow-y: auto;">
+                Live speech-to-text transcript will appear here as you speak...
+              </div>
+            </div>
+          </div>
+
+          <!-- Mode 3: Paste Transcript -->
+          <div id="ktBoxText" class="kt-input-box" style="display: none;">
+            <textarea id="ktTranscriptTextInput" class="form-textarea" style="min-height: 140px; font-size: 0.78rem; font-family: monospace;" placeholder="Paste raw meeting transcript from Zoom, Microsoft Teams, Otter.ai, or Loom...&#10;&#10;e.g.:&#10;[00:01:15] Sarah: We route all customer checkout requests through Envoy API Gateway...&#10;[00:02:40] Dave: And card tokens are authorized via Stripe..."></textarea>
+          </div>
+
+          <!-- Bottom Action Bar -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-color);">
+            <button class="btn btn-sm" id="btnLoadSampleKt" title="Load a realistic 18-minute Payment & Fulfillment KT session immediately">
+              ⚡ Load Sample KT Session (Demo)
+            </button>
+            <button class="btn btn-ai" id="btnProcessKt">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Transcribe & Synthesize Architecture
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 2: ARCHITECTURE DOCUMENT & TTS VOICE PLAYER -->
+        <div id="ktTabDocument" class="kt-tab-pane" style="display: none;">
+          <!-- Text-to-Speech (TTS) Voice Player -->
+          <div class="tts-player-bar">
+            <div class="tts-controls">
+              <button class="btn btn-sm btn-tts-play" id="btnTtsPlayPause">
+                <span id="ttsPlayIcon">▶ Listen (TTS)</span>
+              </button>
+              <button class="btn btn-sm" id="btnTtsStop" title="Stop Voice Playback">⏹ Stop</button>
+              
+              <div style="display: flex; align-items: center; gap: 4px; margin-left: 6px;">
+                <span style="font-size: 0.72rem; color: var(--text-secondary);">Voice:</span>
+                <select id="ttsVoiceSelect" class="select-input" style="padding: 2px 6px; font-size: 0.72rem; max-width: 170px;">
+                  <option value="">Default Natural Voice</option>
+                </select>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span style="font-size: 0.72rem; color: var(--text-secondary);">Speed:</span>
+                <select id="ttsRateSelect" class="select-input" style="padding: 2px 6px; font-size: 0.72rem;">
+                  <option value="0.8">0.8x</option>
+                  <option value="1.0" selected>1.0x</option>
+                  <option value="1.2">1.2x</option>
+                  <option value="1.5">1.5x</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="tts-status-tag" id="ttsStatusTag">
+              <span>🔊</span>
+              <span id="ttsStatusText">Ready for Voice Narration</span>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div class="section-title" style="margin: 0;" id="ktDocTitleDisplay">Generated Architecture Specification</div>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn btn-sm" id="btnToggleKtView">View Transcript</button>
+              <button class="btn btn-sm" id="btnCopyKtDoc">Copy Markdown</button>
+              <button class="btn btn-sm btn-primary" id="btnDownloadKtDoc">Download .md</button>
+            </div>
+          </div>
+
+          <!-- Document Render Area -->
+          <div id="ktDocPreviewContainer" class="kt-doc-container">
+            <p style="color: var(--text-muted); font-style: italic;">No KT document generated yet. Transcribe an audio recording or load the demo session in Step 1.</p>
+          </div>
+
+          <div id="ktTranscriptPreviewContainer" class="kt-doc-container" style="display: none; font-family: monospace; white-space: pre-wrap;"></div>
+        </div>
+
+        <!-- TAB 3: EXTRACTED GRAPH TOPOLOGY -->
+        <div id="ktTabGraph" class="kt-tab-pane" style="display: none;">
+          <div class="jira-stat-grid">
+            <div class="jira-stat-box">
+              <div class="jira-stat-num" id="statKtDomains" style="color: #a78bfa;">0</div>
+              <div class="jira-stat-label">Functional Domains</div>
+            </div>
+            <div class="jira-stat-box">
+              <div class="jira-stat-num" id="statKtFlows" style="color: #38bdf8;">0</div>
+              <div class="jira-stat-label">User Flows</div>
+            </div>
+            <div class="jira-stat-box">
+              <div class="jira-stat-num" id="statKtRules" style="color: #fbbf24;">0</div>
+              <div class="jira-stat-label">Rules / Policies</div>
+            </div>
+            <div class="jira-stat-box">
+              <div class="jira-stat-num" id="statKtTech" style="color: #22d3ee;">0</div>
+              <div class="jira-stat-label">Technical Assets</div>
+            </div>
+          </div>
+
+          <div class="section-title">Extracted Knowledge Graph Topology</div>
+          <pre id="ktGraphPreviewBox" style="background:#0b0f19; padding:12px; border-radius:8px; font-size:0.75rem; max-height:200px; overflow-y:auto; color:#a7f3d0; margin-bottom:12px; font-family:monospace;">Extract a KT session to view topology nodes and edges.</pre>
+
+          <button class="btn btn-primary" id="btnApplyKtGraph" style="width: 100%; justify-content: center;">
+            Add Extracted Architecture to Active Knowledge Graph
+          </button>
+        </div>
+
+        <!-- TAB 4: KT SESSIONS ARCHIVE -->
+        <div id="ktTabArchive" class="kt-tab-pane" style="display: none;">
+          <div class="section-title">Saved Knowledge Transfer Sessions</div>
+          <div id="ktSessionListContainer" class="kt-session-list">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn" data-close="modalKtStudio">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST ALERTS -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- App logic -->
+  <script src="app.js"></script>
+</body>
+</html>
